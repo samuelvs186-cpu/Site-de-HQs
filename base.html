@@ -1,13 +1,152 @@
 <!DOCTYPE html>
-<html lang="PT-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>ComicStream - A Melhor Plataforma de HQs</title>
     <link rel="stylesheet" href="estilo.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">
+                <i class="fas fa-book"></i>
+                <span>ComicStream</span>
+            </div>
+            <div class="navbar-menu">
+                <ul class="nav-list">
+                    <li><a href="#home" class="nav-link">Início</a></li>
+                    <li><a href="#em-destaque" class="nav-link">Em Destaque</a></li>
+                    <li><a href="#todos" class="nav-link">Biblioteca</a></li>
+                    <li><a href="#generos" class="nav-link">Gêneros</a></li>
+                </ul>
+            </div>
+            <div class="navbar-search">
+                <input type="text" id="searchInput" class="search-input" placeholder="Buscar HQs...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="navbar-user">
+                <button class="user-btn"><i class="fas fa-user"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 id="heroTitle">Bem-vindo ao ComicStream</h1>
+            <p id="heroDesc">Explore o maior acervo de histórias em quadrinhos</p>
+            <button class="btn-primary">Começar a Ler</button>
+        </div>
+        <div class="hero-background"></div>
+    </section>
+
+    <!-- FILTROS -->
+    <section class="filters">
+        <div class="filter-container">
+            <div class="filter-group">
+                <label>Gênero:</label>
+                <select id="generoFilter">
+                    <option value="todos">Todos</option>
+                    <option value="acao">Ação</option>
+                    <option value="aventura">Aventura</option>
+                    <option value="romance">Romance</option>
+                    <option value="suspense">Suspense</option>
+                    <option value="fantasia">Fantasia</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Ordenar:</label>
+                <select id="ordenarFilter">
+                    <option value="recente">Mais Recente</option>
+                    <option value="popular">Mais Popular</option>
+                    <option value="alfabetico">A - Z</option>
+                    <option value="nota">Melhor Avaliação</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- GRID DE HQs -->
+    <section class="comics-container">
+        <h2 class="section-title">Biblioteca de HQs</h2>
+        <div class="comics-grid" id="comicsGrid">
+            <!-- HQs serão carregadas via JavaScript -->
+        </div>
+    </section>
+
+    <!-- MODAL DE LEITURA -->
+    <div id="readModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body">
+                <div class="comic-viewer">
+                    <img id="comicImage" src="" alt="Página do quadrinho">
+                    <div class="viewer-controls">
+                        <button class="control-btn" id="prevPage"><i class="fas fa-chevron-left"></i></button>
+                        <span id="pageInfo" class="page-info">Página 1 de 50</span>
+                        <button class="control-btn" id="nextPage"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="comic-info">
+                    <h3 id="modalTitle">Título do Quadrinho</h3>
+                    <p id="modalAutor" class="autor">Autor</p>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <span id="modalRating">4.5</span>
+                    </div>
+                    <p id="modalDesc" class="descricao">Descrição completa da história</p>
+                    <div class="modal-buttons">
+                        <button class="btn-primary">Continuar Lendo</button>
+                        <button class="btn-secondary"><i class="fas fa-heart"></i> Favoritar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Sobre</h4>
+                <ul>
+                    <li><a href="#">Sobre Nós</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Carreiras</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Suporte</h4>
+                <ul>
+                    <li><a href="#">Centro de Ajuda</a></li>
+                    <li><a href="#">Contato</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Termos de Serviço</a></li>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Cookies</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Redes Sociais</h4>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 ComicStream. Todos os direitos reservados.</p>
+        </div>
+    </footer>
 
     <script src="back.js"></script>
 </body>
