@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- NAVBAR -->
+    
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-logo">
@@ -28,15 +28,48 @@
                 <button class="search-btn"><i class="fas fa-search"></i></button>
             </div>
             <div class="navbar-user">
-                <button class="user-btn"><i class="fas fa-user"></i></button>
+                <button class="user-btn" id="userBtn" aria-haspopup="true" aria-expanded="false">
+                    <img id="userBtnAvatar" class="user-btn-avatar" src="" alt="Avatar">
+                    <i class="fas fa-user user-icon"></i>
+                </button>
+                <div class="user-menu" id="userMenu" aria-hidden="true">
+                    <div class="user-menu-header">
+                        <img src="" alt="Avatar" id="userAvatar" class="user-avatar">
+                        <div class="user-name">Olá, Convidado</div>
+                    </div>
+                    <ul class="user-menu-list">
+                        <li><button class="user-menu-item" id="changePhotoBtn"><i class="fas fa-camera"></i> Alterar foto</button></li>
+                        <li><button class="user-menu-item" id="customizeBtn"><i class="fas fa-paint-roller"></i> Personalizar</button></li>
+                        <li><button class="user-menu-item" id="settingsBtn"><i class="fas fa-cog"></i> Configurações</button></li>
+                        <li><button class="user-menu-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</button></li>
+                    </ul>
+                </div>
+                <input type="file" id="avatarInput" accept="image/*" style="display:none">
             </div>
+    
+                <!-- AVATAR PREVIEW MODAL -->
+                <div id="avatarModal" class="modal avatar-modal" aria-hidden="true">
+                    <div class="modal-content">
+                        <span class="close-modal" id="closeAvatarModal">&times;</span>
+                        <div class="modal-body" style="grid-template-columns: 1fr;">
+                            <div class="avatar-preview-container">
+                                <img id="avatarPreview" src="" alt="Pré-visualização" class="avatar-preview-img">
+                                <input type="file" id="avatarFileInput" accept="image/*">
+                                <div class="avatar-preview-actions">
+                                    <button class="btn-primary" id="avatarConfirmBtn">Confirmar</button>
+                                    <button class="btn-secondary" id="avatarCancelBtn">Cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
         </div>
     </nav>
 
     <!-- HERO SECTION -->
     <section class="hero">
         <div class="hero-content">
-            <h1 id="heroTitle">Bem-vindo ao ComicStream</h1>
+            <h1 id="heroTitle">Bem-vindo ao Quasarcomics</h1>
             <p id="heroDesc">Explore o maior acervo de histórias em quadrinhos</p>
             <button class="btn-primary">Começar a Ler</button>
         </div>

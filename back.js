@@ -114,6 +114,277 @@ function setupEventListeners() {
     });
     generoFilter.addEventListener('change', applyFilters);
     ordenarFilter.addEventListener('change', applyFilters);
+    
+    // USER MENU ELEMENTS
+    const userBtn = document.getElementById('userBtn');
+    const userMenu = document.getElementById('userMenu');
+    const avatarInput = document.getElementById('avatarInput');
+    const avatarFileInput = document.getElementById('avatarFileInput');
+    const changePhotoBtn = document.getElementById('changePhotoBtn');
+    const customizeBtn = document.getElementById('customizeBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (userBtn && userMenu) {
+        userBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isVisible = userMenu.classList.toggle('visible');
+            userBtn.setAttribute('aria-expanded', isVisible);
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenu.contains(e.target) && e.target !== userBtn) {
+                userMenu.classList.remove('visible');
+                userBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    if (changePhotoBtn) {
+        changePhotoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // abrir modal e solicitar arquivo
+            const avatarModal = document.getElementById('avatarModal');
+            if (avatarModal) {
+                avatarModal.style.display = 'block';
+                avatarModal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }
+            // prefer visible input inside modal, fallback to hidden one
+            if (avatarFileInput) {
+                avatarFileInput.click();
+            } else if (avatarInput) {
+                avatarInput.click();
+            }
+        });
+
+        // ouvir mudanças no input visível (modal)
+        if (avatarFileInput) {
+            avatarFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const dataUrl = ev.target.result;
+                    const avatarPreview = document.getElementById('avatarPreview');
+                    if (avatarPreview) avatarPreview.src = dataUrl;
+                    // armazenar temporariamente até confirmação
+                    window.tempAvatar = dataUrl;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        // keep fallback for hidden input if present
+        if (avatarInput) {
+            avatarInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const dataUrl = ev.target.result;
+                    const avatarPreview = document.getElementById('avatarPreview');
+                    if (avatarPreview) avatarPreview.src = dataUrl;
+                    window.tempAvatar = dataUrl;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    }
+
+    // AVATAR MODAL CONTROLS
+    const avatarModalEl = document.getElementById('avatarModal');
+    const avatarPreviewEl = document.getElementById('avatarPreview');
+    const avatarConfirmBtn = document.getElementById('avatarConfirmBtn');
+    const avatarCancelBtn = document.getElementById('avatarCancelBtn');
+    const closeAvatarModalBtn = document.getElementById('closeAvatarModal');
+
+    function closeAvatarModal() {
+        const modalEl = document.getElementById('avatarModal');
+        if (modalEl) {
+            modalEl.style.display = 'none';
+            modalEl.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        }
+        if (avatarInput) avatarInput.value = '';
+        const avatarFileInputEl = document.getElementById('avatarFileInput');
+        if (avatarFileInputEl) avatarFileInputEl.value = '';
+        window.tempAvatar = null;
+        if (avatarPreviewEl) avatarPreviewEl.src = '';
+    }
+
+    if (avatarConfirmBtn) {
+        avatarConfirmBtn.addEventListener('click', () => {
+            // if we already have a temp data URL, use it
+            if (window.tempAvatar) {
+                applyAvatar(window.tempAvatar);
+                return;
+            }
+
+            // otherwise try to read the selected file from visible input
+            const avatarFileInputEl = document.getElementById('avatarFileInput');
+            const fallbackInput = document.getElementById('avatarInput');
+            const file = (avatarFileInputEl && avatarFileInputEl.files && avatarFileInputEl.files[0]) || (fallbackInput && fallbackInput.files && fallbackInput.files[0]);
+            if (!file) {
+                alert('Nenhum arquivo selecionado para confirmar.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const dataUrl = ev.target.result;
+                applyAvatar(dataUrl);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function applyAvatar(dataUrl) {
+        const avatarImg = document.getElementById('userAvatar');
+        const userBtnAvatar = document.getElementById('userBtnAvatar');
+        const userBtn = document.getElementById('userBtn');
+
+        async function trySet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        try {
+            // tentativa direta
+            if (await trySet('userAvatar', dataUrl)) {
+                if (avatarImg) avatarImg.src = dataUrl;
+                if (userBtnAvatar) {
+                    userBtnAvatar.src = dataUrl;
+                    userBtnAvatar.style.display = 'block';
+                }
+                if (userBtn) userBtn.classList.add('has-avatar');
+                closeAvatarModal();
+                alert('Foto de perfil atualizada.');
+                return;
+            }
+
+            // se falhar por cota, tentar comprimir em etapas
+            const attempts = [ {size:1024, q:0.85}, {size:800, q:0.8}, {size:512, q:0.7}, {size:320, q:0.6} ];
+            for (const a of attempts) {
+                try {
+                    const compressed = await compressDataUrl(dataUrl, a.size, a.q);
+                    if (await trySet('userAvatar', compressed)) {
+                        if (avatarImg) avatarImg.src = compressed;
+                        if (userBtnAvatar) {
+                            userBtnAvatar.src = compressed;
+                            userBtnAvatar.style.display = 'block';
+                        }
+                        if (userBtn) userBtn.classList.add('has-avatar');
+                        closeAvatarModal();
+                        alert('Foto de perfil atualizada (compactada).');
+                        return;
+                    }
+                } catch (err) {
+                    // ignore and try next
+                    console.warn('compress attempt failed', err);
+                }
+            }
+
+            // última tentativa falhou
+            alert('Não foi possível salvar a imagem: arquivo muito grande. Tente outra imagem menor.');
+            console.error('Erro ao aplicar avatar: Falha ao armazenar em localStorage após compressões.');
+        } catch (err) {
+            console.error('Erro ao aplicar avatar:', err);
+            alert('Erro ao salvar a foto. Veja o console para detalhes.');
+        }
+    }
+
+    // compress DataURL via canvas
+    function compressDataUrl(dataUrl, maxDim, quality) {
+        return new Promise((resolve, reject) => {
+            try {
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        let { width, height } = img;
+                        const ratio = Math.min(1, maxDim / Math.max(width, height));
+                        const w = Math.round(width * ratio);
+                        const h = Math.round(height * ratio);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const out = canvas.toDataURL('image/jpeg', quality);
+                        resolve(out);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                img.onerror = (e) => reject(e || new Error('Erro ao carregar imagem para compressão'));
+                img.src = dataUrl;
+                // se dataUrl for de origem cruzada, force anonymous? dataUrl should be same-origin
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    if (avatarCancelBtn) {
+        avatarCancelBtn.addEventListener('click', () => {
+            closeAvatarModal();
+        });
+    }
+
+    if (closeAvatarModalBtn) {
+        closeAvatarModalBtn.addEventListener('click', () => {
+            closeAvatarModal();
+        });
+    }
+
+    // fechar modal ao clicar fora
+    document.addEventListener('click', (e) => {
+        if (e.target === avatarModalEl) closeAvatarModal();
+    });
+
+    if (customizeBtn) {
+        customizeBtn.addEventListener('click', () => {
+            const color = prompt('Insira a cor primária (hex), por exemplo #7c3aed:', localStorage.getItem('primaryColor') || '');
+            if (color && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color.trim())) {
+                document.documentElement.style.setProperty('--primary-color', color.trim());
+                localStorage.setItem('primaryColor', color.trim());
+            } else if (color !== null) {
+                alert('Cor inválida. Use formato hexadecimal, por exemplo #7c3aed');
+            }
+        });
+    }
+
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            alert('Abrindo configurações...');
+            location.hash = '#settings';
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('Deseja realmente sair?')) {
+                localStorage.removeItem('userAvatar');
+                localStorage.removeItem('userName');
+                // opcional: preservar favoritos, tema
+                // atualizar UI imediatamente
+                const avatarImg = document.getElementById('userAvatar');
+                const userBtn = document.getElementById('userBtn');
+                const userBtnAvatar = document.getElementById('userBtnAvatar');
+                if (avatarImg) avatarImg.src = '';
+                if (userBtnAvatar) userBtnAvatar.src = '';
+                if (userBtn) userBtn.classList.remove('has-avatar');
+                alert('Você foi desconectado.');
+                location.reload();
+            }
+        });
+    }
+
+    // carregar avatar/tema salvos
+    loadUserPreferences();
 }
 
 // RENDERIZAR GRID DE HQs
@@ -263,4 +534,32 @@ function addToFavorites() {
 const favBtn = document.querySelector('.btn-secondary');
 if (favBtn) {
     favBtn.addEventListener('click', addToFavorites);
+}
+
+// CARREGAR AVATAR E TEMA DO LOCALSTORAGE
+function loadUserPreferences() {
+    const avatarData = localStorage.getItem('userAvatar');
+    const avatarImg = document.getElementById('userAvatar');
+    const userBtnAvatar = document.getElementById('userBtnAvatar');
+    const userBtn = document.getElementById('userBtn');
+    if (avatarData) {
+        if (avatarImg) avatarImg.src = avatarData;
+        if (userBtnAvatar) {
+            userBtnAvatar.src = avatarData;
+            userBtnAvatar.style.display = 'block';
+        }
+        if (userBtn) userBtn.classList.add('has-avatar');
+    } else {
+        if (avatarImg) avatarImg.src = '';
+        if (userBtnAvatar) {
+            userBtnAvatar.src = '';
+            userBtnAvatar.style.display = 'none';
+        }
+        if (userBtn) userBtn.classList.remove('has-avatar');
+    }
+
+    const primaryColor = localStorage.getItem('primaryColor');
+    if (primaryColor) {
+        document.documentElement.style.setProperty('--primary-color', primaryColor);
+    }
 }
